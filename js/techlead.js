@@ -982,7 +982,7 @@ class TechleadApp {
      * Déconnexion
      */
     logout() {
-        stopQueuePositionUpdates();
+        this.stopQueuePositionUpdates();
         // Détruire la connexion P2P
         this.peerService.destroy();
         
