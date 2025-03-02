@@ -18,8 +18,9 @@ class DeveloperApp {
         
         // Éléments du DOM
         this.searchResultsElement = document.getElementById('search-results');
-        this.activeRequestDetailsElement = document.getElementById('active-request-details');
-        this.noActiveRequestElement = document.getElementById('no-active-request');
+        this.activeRequestsListElement = document.getElementById('active-requests-list');
+        this.noActiveRequestsElement = document.getElementById('no-active-requests');
+        this.requestTemplate = document.getElementById('active-request-template');
         this.chatPanelElement = document.getElementById('chat-panel');
         this.historyListElement = document.getElementById('history-list');
         this.feedbackModalElement = document.getElementById('feedback-modal');
@@ -53,7 +54,7 @@ class DeveloperApp {
             this.setupPeerListeners();
             
             // Charger la demande active et l'historique
-            this.loadActiveRequest();
+            this.loadActiveRequests();
             this.loadHistory();
         } catch (error) {
             this.notifications.error(`Erreur de connexion P2P: ${error.message}`);
@@ -86,10 +87,6 @@ class DeveloperApp {
         document.getElementById('screenshot').addEventListener('change', (e) => {
             this.handleScreenshotUpload(e);
         });
-        
-        // Actions de demande active
-        document.getElementById('cancel-request').addEventListener('click', () => this.cancelRequest());
-        document.getElementById('open-chat').addEventListener('click', () => this.openChat());
         
         // Actions de chat
         document.getElementById('close-chat').addEventListener('click', () => this.closeChat());
@@ -175,21 +172,37 @@ class DeveloperApp {
      * @param {string} estimatedTime - Temps d'attente estimé
      */
     handleQueuePosition(requestId, position, estimatedTime) {
-        // Vérifier que la mise à jour concerne notre demande active
-        if (!this.activeRequest || this.activeRequest.id !== requestId) return;
+        // Trouver la demande dans notre liste
+        const requestIndex = this.activeRequests.findIndex(req => req.id === requestId);
+        
+        if (requestIndex === -1) return;
+        
+        const request = this.activeRequests[requestIndex];
+        const oldPosition = request.position;
+        
+        // Mettre à jour la position dans notre objet
+        request.position = position;
         
         // Mettre à jour l'interface
-        document.getElementById('position-number').textContent = position;
-        document.getElementById('estimated-time').textContent = estimatedTime;
-        
-        // Notifier si la position a changé (amélioration optionnelle)
-        if (this.activeRequest.lastPosition && this.activeRequest.lastPosition > position) {
-            this.notifications.info(`Votre position dans la file a été mise à jour: ${position}`);
+        const requestCard = this.activeRequestsListElement.querySelector(`[data-request-id="${requestId}"]`);
+        if (requestCard) {
+            const positionElement = requestCard.querySelector('.position-number');
+            positionElement.textContent = position;
+            requestCard.querySelector('.estimated-time').textContent = estimatedTime;
+            
+            // Ajouter une animation si la position a changé
+            if (oldPosition && oldPosition > position) {
+                positionElement.classList.add('position-updated');
+                setTimeout(() => {
+                    positionElement.classList.remove('position-updated');
+                }, 2000);
+                
+                this.notifications.info(`Votre position pour la demande "${request.title}" a été mise à jour: ${position}`);
+            }
         }
         
-        // Stocker la dernière position connue
-        this.activeRequest.lastPosition = position;
-        this.storage.save('active_request', this.activeRequest);
+        // Sauvegarder les modifications
+        this.saveRequests();
     }
     
     /**
@@ -436,12 +449,14 @@ class DeveloperApp {
         // Initialiser la position à 1 par défaut (sera mise à jour par le techlead)
         request.lastPosition = 1;
         
-        // Sauvegarder la demande
-        this.activeRequest = request;
-        this.storage.save('active_request', request);
-        
+        // Ajouter à notre liste de demandes actives
+        this.activeRequests.push(request);
+
+        // Stocker toutes les demandes dans une seule clé
+        this.saveRequests();
+
         // Mettre à jour l'interface
-        this.updateActiveRequestUI(request);
+        this.updateActiveRequestsUI();
         
         // Envoyer la demande au techlead
         try {
@@ -468,61 +483,136 @@ class DeveloperApp {
             this.notifications.error(`Erreur lors de l'envoi de la demande: ${error.message}`);
         }
     }
-    
+
     /**
-     * Charge la demande active depuis le stockage local
+     * Sauvegarde toutes les demandes dans le stockage
      */
-    loadActiveRequest() {
-        const activeRequest = this.storage.get('active_request');
+    saveRequests() {
+        let allRequests = this.storage.get('requests', []);
         
-        if (activeRequest && (activeRequest.status === 'waiting' || activeRequest.status === 'in-progress')) {
-            this.activeRequest = activeRequest;
-            this.updateActiveRequestUI(activeRequest);
-            
-            // Se connecter au techlead pour recevoir les mises à jour
-            this.peerService.connect(activeRequest.techleadId)
-                .catch(error => {
-                    console.error('Erreur de connexion au techlead:', error);
-                });
-        }
+        // Mettre à jour ou ajouter les demandes actives
+        this.activeRequests.forEach(activeReq => {
+            const index = allRequests.findIndex(req => req.id === activeReq.id);
+            if (index >= 0) {
+                allRequests[index] = activeReq;
+            } else {
+                allRequests.push(activeReq);
+            }
+        });
+        
+        // Sauvegarder
+        this.storage.save('requests', allRequests);
     }
     
     /**
-     * Met à jour l'interface pour la demande active
-     * @param {Object} request - Demande active
+     * Charge les demandes actives depuis le stockage local
      */
-    updateActiveRequestUI(request) {
-        if (!request) {
-            this.noActiveRequestElement.classList.add('active');
-            this.activeRequestDetailsElement.classList.remove('active');
+    loadActiveRequests() {
+        // Récupérer toutes les demandes depuis le stockage
+        const allRequests = this.storage.get('requests', []);
+        
+        // Filtrer pour obtenir uniquement les demandes actives de ce développeur
+        const activeRequests = allRequests.filter(req => 
+            req.developerId === this.developerId && 
+            (req.status === 'waiting' || req.status === 'in-progress')
+        );
+        
+        // Mettre à jour notre liste locale
+        this.activeRequests = activeRequests;
+        
+        // Mettre à jour l'interface
+        this.updateActiveRequestsUI();
+        
+        // Se connecter aux techleads pour recevoir les mises à jour
+        activeRequests.forEach(request => {
+            this.peerService.connect(request.techleadId)
+                .catch(error => {
+                    console.error(`Erreur de connexion au techlead ${request.techleadId}:`, error);
+                });
+        });
+    }
+    
+    /**
+     * Met à jour l'interface pour les demandes actives
+     */
+    updateActiveRequestsUI() {
+        // Vider la liste actuelle
+        this.activeRequestsListElement.innerHTML = '';
+        
+        if (this.activeRequests.length === 0) {
+            // Afficher l'état vide
+            this.noActiveRequestsElement.classList.add('active');
             return;
         }
         
-        // Masquer l'état vide et afficher les détails
-        this.noActiveRequestElement.classList.remove('active');
-        this.activeRequestDetailsElement.classList.add('active');
+        // Masquer l'état vide
+        this.noActiveRequestsElement.classList.remove('active');
         
-        // Mettre à jour les champs
-        document.getElementById('active-title').textContent = request.title;
-        document.getElementById('active-priority').textContent = Utils.translate(request.priority);
-        document.getElementById('active-priority').className = `priority-badge ${Utils.getPriorityClass(request.priority)}`;
-        document.getElementById('active-techlead').textContent = request.techleadId;
-        document.getElementById('active-status').textContent = Utils.translate(request.status);
-        document.getElementById('active-time').textContent = Utils.formatDate(request.createdAt);
+        // Trier les demandes par statut (in-progress en premier) puis par date
+        this.activeRequests.sort((a, b) => {
+            if (a.status !== b.status) {
+                return a.status === 'in-progress' ? -1 : 1;
+            }
+            return new Date(a.createdAt) - new Date(b.createdAt);
+        });
         
-        // Mettre à jour la position dans la file et l'estimation
-        // Dans une vraie application, cela serait dynamique
-        const position = 1; // Pour l'exemple
-        document.getElementById('position-number').textContent = position;
-        document.getElementById('estimated-time').textContent = Utils.estimateWaitTime(position);
+        // Ajouter chaque demande à la liste
+        this.activeRequests.forEach(request => {
+            this.addRequestToActiveList(request);
+        });
+    }
+
+    /**
+     * Ajoute une demande à la liste des demandes actives
+     * @param {Object} request - Demande à ajouter
+     */
+    addRequestToActiveList(request) {
+        // Cloner le template
+        const requestCard = this.requestTemplate.content.cloneNode(true).firstElementChild;
         
-        // Mettre à jour les boutons d'action
-        const chatButton = document.getElementById('open-chat');
+        // Définir l'ID de la demande comme attribut data
+        requestCard.dataset.requestId = request.id;
+        
+        // Ajouter la classe de statut
+        requestCard.classList.add(`status-${request.status}`);
+        
+        // Remplir les informations
+        requestCard.querySelector('.active-title').textContent = request.title;
+        
+        const priorityBadge = requestCard.querySelector('.priority-badge');
+        priorityBadge.textContent = Utils.translate(request.priority);
+        priorityBadge.className = `priority-badge ${Utils.getPriorityClass(request.priority)}`;
+        
+        requestCard.querySelector('.active-techlead').textContent = request.techleadId;
+        requestCard.querySelector('.active-status').textContent = Utils.translate(request.status);
+        requestCard.querySelector('.active-time').textContent = Utils.formatDate(request.createdAt);
+        
+        // Position dans la file
+        const position = request.position || '-';
+        requestCard.querySelector('.position-number').textContent = position;
+        
+        const estimatedTime = position !== '-' ? Utils.estimateWaitTime(position) : '-';
+        requestCard.querySelector('.estimated-time').textContent = estimatedTime;
+        
+        // Configurer les boutons d'action
+        const chatButton = requestCard.querySelector('.open-chat');
         if (request.status === 'in-progress') {
             chatButton.style.display = 'block';
         } else {
             chatButton.style.display = 'none';
         }
+        
+        // Ajouter les écouteurs d'événements
+        requestCard.querySelector('.cancel-request').addEventListener('click', () => {
+            this.cancelRequest(request.id);
+        });
+        
+        chatButton.addEventListener('click', () => {
+            this.openChat(request.id);
+        });
+        
+        // Ajouter à la liste
+        this.activeRequestsListElement.appendChild(requestCard);
     }
     
     /**
@@ -530,29 +620,39 @@ class DeveloperApp {
      * @param {Object} updatedRequest - Demande mise à jour
      */
     handleRequestUpdate(updatedRequest) {
-        // Vérifier que la mise à jour concerne notre demande active
-        if (!this.activeRequest || this.activeRequest.id !== updatedRequest.id) return;
+        // Trouver la demande dans notre liste
+        const requestIndex = this.activeRequests.findIndex(req => req.id === updatedRequest.id);
         
-        // Sauvegarder la demande mise à jour
-        this.activeRequest = updatedRequest;
-        this.storage.save('active_request', updatedRequest);
+        if (requestIndex === -1) return;
+        
+        const oldStatus = this.activeRequests[requestIndex].status;
+        
+        // Mettre à jour la demande
+        this.activeRequests[requestIndex] = updatedRequest;
+        
+        // Sauvegarder
+        this.saveRequests();
         
         // Mettre à jour l'interface
-        this.updateActiveRequestUI(updatedRequest);
+        this.updateActiveRequestsUI();
         
         // Gérer les changements de statut
-        if (updatedRequest.status === 'in-progress' && this.activeRequest.status !== 'in-progress') {
+        if (updatedRequest.status === 'in-progress' && oldStatus !== 'in-progress') {
             this.notifications.showBrowserNotification(
                 'Demande prise en charge',
-                'Votre demande est maintenant en cours de traitement',
+                `Votre demande "${updatedRequest.title}" est maintenant en cours de traitement`,
                 { onClick: () => window.focus() }
             );
         } else if (updatedRequest.status === 'resolved') {
             this.notifications.showBrowserNotification(
                 'Demande résolue',
-                'Votre demande a été marquée comme résolue',
+                `Votre demande "${updatedRequest.title}" a été marquée comme résolue`,
                 { onClick: () => window.focus() }
             );
+            
+            // Supprimer de la liste des demandes actives
+            this.activeRequests.splice(requestIndex, 1);
+            this.updateActiveRequestsUI();
             
             // Ajouter à l'historique
             this.addRequestToHistory(updatedRequest);
@@ -565,39 +665,43 @@ class DeveloperApp {
     }
     
     /**
-     * Annule la demande active
+     * Annule une demande
+     * @param {string} requestId - ID de la demande à annuler
      */
-    cancelRequest() {
-        if (!this.activeRequest) {
-            this.notifications.warning('Aucune demande active à annuler');
+    cancelRequest(requestId) {
+        // Trouver la demande dans notre liste
+        const requestIndex = this.activeRequests.findIndex(req => req.id === requestId);
+        
+        if (requestIndex === -1) {
+            this.notifications.warning('Demande non trouvée');
             return;
         }
         
+        const request = this.activeRequests[requestIndex];
+        
         // Mettre à jour le statut
-        this.activeRequest.status = 'cancelled';
-        this.activeRequest.updatedAt = new Date().toISOString();
-        
-        // Sauvegarder la modification
-        this.storage.save('active_request', null);
-        
-        // Ajouter à l'historique
-        this.addRequestToHistory(this.activeRequest);
+        request.status = 'cancelled';
+        request.updatedAt = new Date().toISOString();
         
         // Notifier le techlead
-        if (this.activeRequest.techleadId) {
-            this.peerService.sendData(this.activeRequest.techleadId, {
+        if (request.techleadId) {
+            this.peerService.sendData(request.techleadId, {
                 type: 'cancel_request',
-                requestId: this.activeRequest.id
+                requestId: request.id
             }).catch(error => {
                 console.error('Erreur lors de l\'annulation de la demande:', error);
             });
         }
         
-        // Effacer la demande active
-        this.activeRequest = null;
+        // Ajouter à l'historique
+        this.addRequestToHistory(request);
         
-        // Mettre à jour l'interface
-        this.updateActiveRequestUI(null);
+        // Supprimer de la liste des demandes actives
+        this.activeRequests.splice(requestIndex, 1);
+        
+        // Sauvegarder et mettre à jour l'interface
+        this.saveRequests();
+        this.updateActiveRequestsUI();
         
         this.notifications.success('Demande annulée');
     }
@@ -697,21 +801,25 @@ class DeveloperApp {
     
     /**
      * Ouvre le chat avec le techlead
+     * @param {string} requestId - ID de la demande concernée
      */
-    openChat() {
-        if (!this.activeRequest || this.activeRequest.status !== 'in-progress') {
+    openChat(requestId) {
+        // Trouver la demande dans notre liste
+        const request = this.activeRequests.find(req => req.id === requestId);
+        
+        if (!request || request.status !== 'in-progress') {
             this.notifications.warning('Le chat n\'est disponible que lorsque votre demande est en cours de traitement');
             return;
         }
         
         // Stocker les informations du chat actif
         this.activeChat = {
-            requestId: this.activeRequest.id,
-            techleadId: this.activeRequest.techleadId
+            requestId: request.id,
+            techleadId: request.techleadId
         };
         
         // Mettre à jour l'interface du chat
-        document.getElementById('chat-with').textContent = `Techlead (${this.activeRequest.techleadId})`;
+        document.getElementById('chat-with').textContent = `Techlead (${request.techleadId})`;
         
         // Charger les messages
         this.loadChatMessages();
@@ -719,6 +827,7 @@ class DeveloperApp {
         // Afficher le panneau de chat
         this.chatPanelElement.classList.add('active');
     }
+
     
     /**
      * Ferme le chat

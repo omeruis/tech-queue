@@ -515,3 +515,88 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Ajouter ces styles dans developer.css */
+
+.active-requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.active-request-card {
+    background-color: var(--card-background);
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+}
+
+.active-request-card .request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.active-request-card .active-title {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.active-request-card .request-info {
+    background-color: #f5f7ff;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.25rem;
+}
+
+.active-request-card .queue-position {
+    margin-bottom: 1.25rem;
+}
+
+.active-request-card .queue-position h4 {
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.active-request-card .position-display {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.active-request-card .position-number {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-radius: 50%;
+}
+
+.active-request-card .request-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* État "en cours" avec bordure spéciale */
+.active-request-card.status-in-progress {
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Animation subtile quand une position change */
+@keyframes highlight {
+    0% { background-color: rgba(67, 97, 238, 0.2); }
+    100% { background-color: transparent; }
+}
+
+.position-updated {
+    animation: highlight 2s ease-out;
+}

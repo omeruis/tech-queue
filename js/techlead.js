@@ -52,6 +52,9 @@ class TechleadApp {
             // Charger les demandes et l'historique
             this.loadRequests();
             this.loadHistory();
+
+            // Démarrer les mises à jour périodiques des positions dans la file d'attente
+            this.startQueuePositionUpdates();
             
             // Configurer les écouteurs pour les événements PeerJS
             this.setupPeerListeners();
@@ -450,6 +453,9 @@ class TechleadApp {
         this.sendRequestUpdate(request);
         
         this.notifications.success('Demande résolue');
+
+        // Mettre à jour les positions dans la file d'attente
+        this.updateQueuePositions();
     }
     
     /**
@@ -494,32 +500,49 @@ class TechleadApp {
      */
     updateQueuePositions() {
         const requests = this.storage.get('requests', []);
-        const waitingRequests = requests.filter(req => 
-            req.techleadId === this.techleadId && 
-            req.status === 'waiting'
-        );
         
-        // Trier les demandes par priorité et date
-        waitingRequests.sort((a, b) => {
-            const priorityOrder = { high: 0, medium: 1, low: 2 };
-            if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-                return priorityOrder[a.priority] - priorityOrder[b.priority];
+        // Regrouper les demandes par techlead
+        const requestsByTechlead = {};
+        
+        requests.forEach(req => {
+            if (req.status === 'waiting') {
+                if (!requestsByTechlead[req.techleadId]) {
+                    requestsByTechlead[req.techleadId] = [];
+                }
+                requestsByTechlead[req.techleadId].push(req);
             }
-            return new Date(a.createdAt) - new Date(b.createdAt);
         });
         
-        // Assigner les positions et envoyer les mises à jour
-        waitingRequests.forEach((request, index) => {
-            const position = index + 1;
-            // Envoyer la mise à jour au développeur
-            this.peerService.sendData(request.developerId, {
-                type: 'queue_position',
-                requestId: request.id,
-                position: position,
-                estimatedTime: Utils.estimateWaitTime(position)
-            }).catch(error => {
-                console.error('Erreur lors de l\'envoi de la position:', error);
+        // Pour chaque techlead, traiter sa file d'attente
+        Object.keys(requestsByTechlead).forEach(techleadId => {
+            const waitingRequests = requestsByTechlead[techleadId];
+            
+            // Trier les demandes par priorité et date
+            waitingRequests.sort((a, b) => {
+                const priorityOrder = { high: 0, medium: 1, low: 2 };
+                if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                }
+                return new Date(a.createdAt) - new Date(b.createdAt);
             });
+            
+            // Si c'est ce techlead, envoyer les positions à tous les développeurs concernés
+            if (techleadId === this.techleadId) {
+                // Attribuer les positions et envoyer les mises à jour
+                waitingRequests.forEach((request, index) => {
+                    const position = index + 1;
+                    
+                    // Envoyer la mise à jour au développeur
+                    this.peerService.sendData(request.developerId, {
+                        type: 'queue_position',
+                        requestId: request.id,
+                        position: position,
+                        estimatedTime: Utils.estimateWaitTime(position)
+                    }).catch(error => {
+                        console.error('Erreur lors de l\'envoi de la position:', error);
+                    });
+                });
+            }
         });
     }
     
@@ -716,6 +739,25 @@ class TechleadApp {
         this.currentRequestId = null;
         this.detailsElement.querySelector('.empty-state').classList.add('active');
         this.detailsElement.querySelector('.details-content').classList.remove('active');
+    }
+
+    /**
+     * Démarre l'envoi périodique des positions dans la file d'attente
+     */
+    startQueuePositionUpdates() {
+        // Envoyer les positions toutes les 30 secondes
+        this.queueUpdateInterval = setInterval(() => {
+            this.updateQueuePositions();
+        }, 60000); // 30 secondes
+    }
+
+    /**
+     * Arrête l'envoi périodique des positions
+     */
+    stopQueuePositionUpdates() {
+        if (this.queueUpdateInterval) {
+            clearInterval(this.queueUpdateInterval);
+        }
     }
     
     /**
@@ -940,6 +982,7 @@ class TechleadApp {
      * Déconnexion
      */
     logout() {
+        stopQueuePositionUpdates();
         // Détruire la connexion P2P
         this.peerService.destroy();
         

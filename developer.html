@@ -90,38 +90,14 @@
                 </div>
                 
                 <div class="status-panel">
-                    <div class="active-request">
-                        <h2>État de votre demande</h2>
-                        
-                        <div id="no-active-request" class="empty-state active">
-                            <p>Aucune demande active</p>
-                        </div>
-                        
-                        <div id="active-request-details" class="active-request-details">
-                            <div class="request-header">
-                                <h3 id="active-title">Titre de la demande</h3>
-                                <div class="priority-badge" id="active-priority">Urgence</div>
-                            </div>
-                            
-                            <div class="request-info">
-                                <p><strong>Techlead assigné:</strong> <span id="active-techlead">ID du Techlead</span></p>
-                                <p><strong>Statut:</strong> <span id="active-status">En attente</span></p>
-                                <p><strong>Soumis le:</strong> <span id="active-time">Heure</span></p>
-                            </div>
-                            
-                            <div class="queue-position">
-                                <h4>Position dans la file</h4>
-                                <div class="position-display">
-                                    <div class="position-number" id="position-number">3</div>
-                                    <p>Temps d'attente estimé: <span id="estimated-time">~15 minutes</span></p>
-                                </div>
-                            </div>
-                            
-                            <div class="request-actions">
-                                <button id="cancel-request" class="danger-btn">Annuler la demande</button>
-                                <button id="open-chat" class="secondary-btn">Ouvrir le chat</button>
-                            </div>
-                        </div>
+                    <h2>Vos demandes actives</h2>
+    
+                    <div id="no-active-requests" class="empty-state active">
+                        <p>Aucune demande active</p>
+                    </div>
+                    
+                    <div id="active-requests-list" class="active-requests-list">
+                        <!-- Les demandes actives seront insérées ici dynamiquement -->
                     </div>
                     
                     <div id="chat-panel" class="chat-panel">
@@ -189,6 +165,34 @@
             </div>
         </div>
     </div>
+
+    <template id="active-request-template">
+        <div class="active-request-card" data-request-id="">
+            <div class="request-header">
+                <h3 class="active-title"></h3>
+                <div class="priority-badge"></div>
+            </div>
+            
+            <div class="request-info">
+                <p><strong>Techlead assigné:</strong> <span class="active-techlead"></span></p>
+                <p><strong>Statut:</strong> <span class="active-status"></span></p>
+                <p><strong>Soumis le:</strong> <span class="active-time"></span></p>
+            </div>
+            
+            <div class="queue-position">
+                <h4>Position dans la file</h4>
+                <div class="position-display">
+                    <div class="position-number">-</div>
+                    <p>Temps d'attente estimé: <span class="estimated-time">-</span></p>
+                </div>
+            </div>
+            
+            <div class="request-actions">
+                <button class="cancel-request danger-btn">Annuler la demande</button>
+                <button class="open-chat secondary-btn">Ouvrir le chat</button>
+            </div>
+        </div>
+    </template>
 
     <script src="js/common.js"></script>
     <script src="js/peer-service.js"></script>
