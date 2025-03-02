@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TechQueue - Interface Techlead</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/techlead.css" />
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header class="techlead-header">
+        <div class="header-left">
+          <h1>TechQueue</h1>
+          <p>Interface Techlead</p>
+        </div>
+        <div class="header-right">
+          <div class="techlead-info">
+            <span id="techlead-id-display">ID: chargement...</span>
+            <span id="expertise-display">Expertise: chargement...</span>
+          </div>
+          <div class="status-toggle">
+            <label class="toggle">
+              <input type="checkbox" id="status-checkbox" checked />
+              <span class="slider"></span>
+            </label>
+            <span id="status-text">Disponible</span>
+          </div>
+          <button id="logout-button">Déconnexion</button>
+        </div>
+      </header>
+
+      <main class="techlead-main">
+        <div class="dashboard">
+          <div class="queue-panel">
+            <h2>
+              File d'attente <span id="queue-count" class="count-badge">0</span>
+            </h2>
+            <div class="request-filters">
+              <button class="filter-btn active" data-filter="all">
+                Toutes
+              </button>
+              <button class="filter-btn" data-filter="waiting">
+                En attente
+              </button>
+              <button class="filter-btn" data-filter="in-progress">
+                En cours
+              </button>
+            </div>
+            <div id="queue-list" class="request-list">
+              <!-- Les demandes seront insérées ici dynamiquement -->
+              <div class="empty-state">
+                <p>Aucune demande en attente</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-panel">
+            <div id="request-details" class="request-details">
+              <div class="empty-state active">
+                <p>Sélectionnez une demande pour voir les détails</p>
+              </div>
+
+              <div class="details-content">
+                <div class="details-header">
+                  <h3 id="details-title">Titre de la demande</h3>
+                  <div class="priority-badge" id="details-priority">
+                    Urgence
+                  </div>
+                </div>
+
+                <div class="details-info">
+                  <p>
+                    <strong>Développeur:</strong>
+                    <span id="details-developer">Nom du développeur</span>
+                  </p>
+                  <p>
+                    <strong>Équipe:</strong>
+                    <span id="details-team">Équipe</span>
+                  </p>
+                  <p>
+                    <strong>Soumis le:</strong>
+                    <span id="details-time">Heure</span>
+                  </p>
+                </div>
+
+                <div class="details-description">
+                  <h4>Description</h4>
+                  <p id="details-description">
+                    Description détaillée du problème...
+                  </p>
+                </div>
+
+                <div class="details-code" id="details-code-section">
+                  <h4>Code</h4>
+                  <pre id="details-code">
+// Code partagé par le développeur</pre
+                  >
+                </div>
+
+                <div class="details-screenshot" id="details-screenshot-section">
+                  <h4>Capture d'écran</h4>
+                  <div class="screenshot-container">
+                    <img
+                      id="details-screenshot"
+                      src="#"
+                      alt="Capture d'écran du problème"
+                    />
+                  </div>
+                </div>
+
+                <div class="details-actions">
+                  <button id="start-button" class="primary-btn">
+                    Prendre en charge
+                  </button>
+                  <button id="resolve-button" class="success-btn">
+                    Marquer comme résolu
+                  </button>
+                  <button id="chat-button" class="secondary-btn">
+                    Ouvrir le chat
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="chat-panel" class="chat-panel">
+              <div class="chat-header">
+                <h3>Chat avec <span id="chat-with">Développeur</span></h3>
+                <button id="close-chat">Fermer</button>
+              </div>
+              <div id="chat-messages" class="chat-messages">
+                <!-- Les messages seront insérés ici dynamiquement -->
+              </div>
+              <div class="chat-input">
+                <textarea
+                  id="message-input"
+                  placeholder="Écrivez votre message..."
+                ></textarea>
+                <button id="send-message">Envoyer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="history-panel">
+          <h2>
+            Historique <span id="history-count" class="count-badge">0</span>
+          </h2>
+          <div id="history-list" class="history-list">
+            <!-- L'historique sera inséré ici dynamiquement -->
+            <div class="empty-state">
+              <p>Aucune demande résolue</p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <div id="notification-container" class="notification-container">
+        <!-- Les notifications seront insérées ici dynamiquement -->
+      </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/peer-service.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/techlead.js"></script>
+  </body>
+</html>

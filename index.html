@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechQueue - Système de Gestion d'Assistance</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TechQueue</h1>
+            <p>Système de gestion de file d'attente pour l'assistance technique</p>
+        </header>
+        
+        <main>
+            <div class="role-selection">
+                <h2>Choisissez votre rôle</h2>
+                
+                <div class="role-cards">
+                    <div class="role-card" id="techlead-card">
+                        <h3>Techlead</h3>
+                        <p>Gérez les demandes d'assistance, suivez la file d'attente et aidez votre équipe.</p>
+                        <div class="form-group">
+                            <label for="techlead-id">Votre ID Techlead:</label>
+                            <input type="text" id="techlead-id" placeholder="Entrez votre ID unique">
+                        </div>
+                        <div class="form-group">
+                            <label for="techlead-expertise">Domaines d'expertise:</label>
+                            <input type="text" id="techlead-expertise" placeholder="ex: React, Node.js, API">
+                        </div>
+                        <button id="enter-as-techlead">Continuer comme Techlead</button>
+                    </div>
+                    
+                    <div class="role-card" id="developer-card">
+                        <h3>Développeur</h3>
+                        <p>Soumettez vos demandes d'assistance et suivez leur progression.</p>
+                        <div class="form-group">
+                            <label for="developer-name">Votre nom:</label>
+                            <input type="text" id="developer-name" placeholder="Prénom et Nom">
+                        </div>
+                        <div class="form-group">
+                            <label for="developer-team">Équipe:</label>
+                            <input type="text" id="developer-team" placeholder="Nom de votre équipe">
+                        </div>
+                        <button id="enter-as-developer">Continuer comme Développeur</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>TechQueue - Application P2P de gestion d'assistance technique</p>
+        </footer>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        document.getElementById('enter-as-techlead').addEventListener('click', function() {
+            const techleadId = document.getElementById('techlead-id').value.trim();
+            const expertise = document.getElementById('techlead-expertise').value.trim();
+            
+            if (!techleadId) {
+                alert('Veuillez entrer un ID Techlead valide');
+                return;
+            }
+            
+            // Stocker les informations et rediriger
+            localStorage.setItem('techleadId', techleadId);
+            localStorage.setItem('expertise', expertise);
+            window.location.href = 'techlead.html';
+        });
+        
+        document.getElementById('enter-as-developer').addEventListener('click', function() {
+            const developerName = document.getElementById('developer-name').value.trim();
+            const team = document.getElementById('developer-team').value.trim();
+            
+            if (!developerName) {
+                alert('Veuillez entrer votre nom');
+                return;
+            }
+            
+            // Stocker les informations et rediriger
+            localStorage.setItem('developerName', developerName);
+            localStorage.setItem('team', team);
+            window.location.href = 'developer.html';
+        });
+    </script>
+</body>
+</html>

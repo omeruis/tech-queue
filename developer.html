@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechQueue - Interface Développeur</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/developer.css">
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="developer-header">
+            <div class="header-left">
+                <h1>TechQueue</h1>
+                <p>Interface Développeur</p>
+            </div>
+            <div class="header-right">
+                <div class="developer-info">
+                    <span id="developer-name-display">Nom: chargement...</span>
+                    <span id="team-display">Équipe: chargement...</span>
+                </div>
+                <button id="logout-button">Déconnexion</button>
+            </div>
+        </header>
+        
+        <main class="developer-main">
+            <div class="main-panels">
+                <div class="request-panel">
+                    <h2>Nouvelle demande d'assistance</h2>
+                    
+                    <form id="request-form" class="request-form">
+                        <div class="form-section">
+                            <label for="techlead-search">Rechercher un Techlead:</label>
+                            <div class="search-container">
+                                <input type="text" id="techlead-search" placeholder="ID du Techlead ou domaine d'expertise">
+                                <button type="button" id="search-button">Rechercher</button>
+                            </div>
+                            <div id="search-results" class="search-results">
+                                <!-- Les résultats de recherche seront insérés ici dynamiquement -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="request-title">Titre de la demande:</label>
+                                <input type="text" id="request-title" placeholder="Résumé bref du problème" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="request-description">Description détaillée:</label>
+                                <textarea id="request-description" placeholder="Décrivez votre problème en détail..." required></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Niveau d'urgence:</label>
+                                <div class="priority-options">
+                                    <label class="priority-option">
+                                        <input type="radio" name="priority" value="low" checked>
+                                        <span class="priority-label low">Faible</span>
+                                    </label>
+                                    <label class="priority-option">
+                                        <input type="radio" name="priority" value="medium">
+                                        <span class="priority-label medium">Moyen</span>
+                                    </label>
+                                    <label class="priority-option">
+                                        <input type="radio" name="priority" value="high">
+                                        <span class="priority-label high">Élevé</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="code-snippet">Code (optionnel):</label>
+                                <textarea id="code-snippet" placeholder="Collez votre code ici..."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="screenshot">Capture d'écran (optionnel):</label>
+                                <input type="file" id="screenshot" accept="image/*">
+                                <div id="screenshot-preview" class="screenshot-preview"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" id="submit-request" class="primary-btn">Soumettre la demande</button>
+                            <button type="reset" class="secondary-btn">Réinitialiser</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="status-panel">
+                    <div class="active-request">
+                        <h2>État de votre demande</h2>
+                        
+                        <div id="no-active-request" class="empty-state active">
+                            <p>Aucune demande active</p>
+                        </div>
+                        
+                        <div id="active-request-details" class="active-request-details">
+                            <div class="request-header">
+                                <h3 id="active-title">Titre de la demande</h3>
+                                <div class="priority-badge" id="active-priority">Urgence</div>
+                            </div>
+                            
+                            <div class="request-info">
+                                <p><strong>Techlead assigné:</strong> <span id="active-techlead">ID du Techlead</span></p>
+                                <p><strong>Statut:</strong> <span id="active-status">En attente</span></p>
+                                <p><strong>Soumis le:</strong> <span id="active-time">Heure</span></p>
+                            </div>
+                            
+                            <div class="queue-position">
+                                <h4>Position dans la file</h4>
+                                <div class="position-display">
+                                    <div class="position-number" id="position-number">3</div>
+                                    <p>Temps d'attente estimé: <span id="estimated-time">~15 minutes</span></p>
+                                </div>
+                            </div>
+                            
+                            <div class="request-actions">
+                                <button id="cancel-request" class="danger-btn">Annuler la demande</button>
+                                <button id="open-chat" class="secondary-btn">Ouvrir le chat</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="chat-panel" class="chat-panel">
+                        <div class="chat-header">
+                            <h3>Chat avec <span id="chat-with">Techlead</span></h3>
+                            <button id="close-chat">Fermer</button>
+                        </div>
+                        <div id="chat-messages" class="chat-messages">
+                            <!-- Les messages seront insérés ici dynamiquement -->
+                        </div>
+                        <div class="chat-input">
+                            <textarea id="message-input" placeholder="Écrivez votre message..."></textarea>
+                            <button id="send-message">Envoyer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="history-panel">
+                <h2>Historique des demandes</h2>
+                <div id="history-list" class="history-list">
+                    <!-- L'historique sera inséré ici dynamiquement -->
+                    <div class="empty-state">
+                        <p>Aucune demande dans l'historique</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div id="notification-container" class="notification-container">
+            <!-- Les notifications seront insérées ici dynamiquement -->
+        </div>
+        
+        <div id="feedback-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Évaluer l'assistance reçue</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Comment évalueriez-vous l'assistance que vous avez reçue?</p>
+                    <div class="rating-container">
+                        <div class="star-rating">
+                            <input type="radio" id="star5" name="rating" value="5">
+                            <label for="star5">&#9733;</label>
+                            <input type="radio" id="star4" name="rating" value="4">
+                            <label for="star4">&#9733;</label>
+                            <input type="radio" id="star3" name="rating" value="3">
+                            <label for="star3">&#9733;</label>
+                            <input type="radio" id="star2" name="rating" value="2">
+                            <label for="star2">&#9733;</label>
+                            <input type="radio" id="star1" name="rating" value="1">
+                            <label for="star1">&#9733;</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="feedback-comment">Commentaires (optionnel):</label>
+                        <textarea id="feedback-comment" placeholder="Partagez votre expérience..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="submit-feedback" class="primary-btn">Soumettre</button>
+                    <button class="secondary-btn close-modal">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/peer-service.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/developer.js"></script>
+</body>
+</html>
