@@ -3,15 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Système P2P de gestion de file d'attente pour l'assistance technique">
+    <meta name="theme-color" content="#007bff">
     <title>TechQueue - Système de Gestion d'Assistance</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/enhanced-features.css">
+    <link rel="stylesheet" href="css/pwa-styles.css">
+
+    <!-- Scripts -->
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
+    <!-- Bouton de thème -->
+    <button class="theme-toggle" onclick="window.themeManager.toggle()" title="Changer de thème"></button>
+
     <div class="container">
         <header>
             <h1>TechQueue</h1>
             <p>Système de gestion de file d'attente pour l'assistance technique</p>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 10px;">
+                ✨ Nouvelle version améliorée avec PWA, mode sombre, analytics et plus!
+            </p>
         </header>
         
         <main>
@@ -55,36 +73,83 @@
         </footer>
     </div>
 
+    <!-- Scripts communs -->
     <script src="js/common.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/analytics.js"></script>
+    <script src="js/tags.js"></script>
+    <script src="js/push-notifications.js"></script>
+    <script src="js/knowledge-base.js"></script>
+    <script src="js/gamification.js"></script>
+    <script src="js/keyboard-shortcuts.js"></script>
+    <script src="js/indexed-db.js"></script>
+    <script src="js/data-export.js"></script>
+    <script src="js/pwa-installer.js"></script>
+
     <script>
+        // Initialiser les systèmes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Analytics: Enregistrer la visite
+            if (window.analyticsManager) {
+                window.analyticsManager.trackEvent('page_visit', { page: 'index' });
+            }
+
+            // Gamification: Mettre à jour la série
+            if (window.gamificationManager) {
+                window.gamificationManager.recordAction('page_visit');
+            }
+        });
+
         document.getElementById('enter-as-techlead').addEventListener('click', function() {
             const techleadId = document.getElementById('techlead-id').value.trim();
             const expertise = document.getElementById('techlead-expertise').value.trim();
-            
+
             if (!techleadId) {
                 alert('Veuillez entrer un ID Techlead valide');
                 return;
             }
-            
+
             // Stocker les informations et rediriger
             localStorage.setItem('techleadId', techleadId);
             localStorage.setItem('expertise', expertise);
+
+            // Analytics
+            if (window.analyticsManager) {
+                window.analyticsManager.trackEvent('role_selected', { role: 'techlead' });
+            }
+
             window.location.href = 'techlead.html';
         });
-        
+
         document.getElementById('enter-as-developer').addEventListener('click', function() {
             const developerName = document.getElementById('developer-name').value.trim();
             const team = document.getElementById('developer-team').value.trim();
-            
+
             if (!developerName) {
                 alert('Veuillez entrer votre nom');
                 return;
             }
-            
+
             // Stocker les informations et rediriger
             localStorage.setItem('developerName', developerName);
+            localStorage.setItem('developerIdinternal', 'dev-' + Date.now());
             localStorage.setItem('team', team);
+
+            // Analytics
+            if (window.analyticsManager) {
+                window.analyticsManager.trackEvent('role_selected', { role: 'developer' });
+            }
+
             window.location.href = 'developer.html';
+        });
+
+        // Afficher les raccourcis clavier avec "?"
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '?' && e.shiftKey) {
+                if (window.keyboardShortcutsManager) {
+                    window.keyboardShortcutsManager.showHelp();
+                }
+            }
         });
     </script>
 </body>

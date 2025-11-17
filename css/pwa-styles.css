@@ -1,0 +1,113 @@
+/**
+ * Styles supplémentaires pour PWA
+ */
+
+/* ============ PWA Installation ============ */
+.pwa-install-button {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    z-index: 9999;
+    display: none;
+    transition: all 0.3s ease;
+}
+
+.pwa-install-button:hover {
+    transform: translateX(-50%) translateY(-3px);
+    box-shadow: 0 6px 25px rgba(0, 123, 255, 0.4);
+}
+
+.pwa-update-notification {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--accent-primary);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10001;
+    box-shadow: var(--shadow);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.update-message {
+    flex: 1;
+    font-weight: 500;
+}
+
+.update-button {
+    background: white;
+    color: var(--accent-primary);
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: all 0.2s ease;
+}
+
+.update-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.update-close {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 10px;
+    line-height: 1;
+}
+
+.offline-status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--warning-color);
+    color: #333;
+    padding: 10px 20px;
+    text-align: center;
+    font-weight: 500;
+    z-index: 10001;
+    animation: slideDown 0.3s ease;
+}
+
+.online-status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--success-color);
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    font-weight: 500;
+    z-index: 10001;
+    animation: slideDown 0.3s ease;
+}
