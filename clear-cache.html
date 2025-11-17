@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vider le Cache - TechQueue</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 28px;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+        button {
+            background: #fff;
+            color: #667eea;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: none;
+        }
+        .status.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Vider le Cache</h1>
+        <p>Cette page permet de vider le cache du service worker et du navigateur pour résoudre les problèmes d'accès aux pages.</p>
+
+        <button id="clear-btn" onclick="clearAllCaches()">
+            Vider tous les caches
+        </button>
+
+        <button onclick="window.location.href='/'">
+            Retour à l'accueil
+        </button>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        async function clearAllCaches() {
+            const btn = document.getElementById('clear-btn');
+            const status = document.getElementById('status');
+
+            btn.disabled = true;
+            status.className = 'status show';
+            status.textContent = 'Nettoyage en cours...';
+
+            try {
+                // 1. Désenregistrer tous les service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                        console.log('Service Worker désenregistré:', registration);
+                    }
+                    status.textContent = '✓ Service Workers désenregistrés\n';
+                }
+
+                // 2. Vider tous les caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (let cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        console.log('Cache supprimé:', cacheName);
+                    }
+                    status.textContent += '✓ Tous les caches supprimés\n';
+                }
+
+                // 3. Vider localStorage
+                localStorage.clear();
+                status.textContent += '✓ localStorage vidé\n';
+
+                // 4. Vider sessionStorage
+                sessionStorage.clear();
+                status.textContent += '✓ sessionStorage vidé\n';
+
+                // 5. Vider IndexedDB
+                if ('indexedDB' in window) {
+                    const databases = await indexedDB.databases();
+                    for (let db of databases) {
+                        indexedDB.deleteDatabase(db.name);
+                        console.log('IndexedDB supprimée:', db.name);
+                    }
+                    status.textContent += '✓ IndexedDB vidée\n';
+                }
+
+                status.textContent += '\n✅ Nettoyage terminé avec succès!\n\nLa page va se recharger dans 3 secondes...';
+                status.className = 'status show success';
+
+                // Recharger la page après 3 secondes
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Erreur lors du nettoyage:', error);
+                status.textContent = '❌ Erreur: ' + error.message;
+                btn.disabled = false;
+            }
+        }
+
+        // Afficher l'état actuel du cache
+        window.addEventListener('load', async () => {
+            const status = document.getElementById('status');
+            let info = 'État actuel:\n\n';
+
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                info += `Service Workers: ${registrations.length}\n`;
+            }
+
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                info += `Caches: ${cacheNames.length}\n`;
+            }
+
+            const localStorageSize = Object.keys(localStorage).length;
+            info += `localStorage: ${localStorageSize} clés\n`;
+
+            status.textContent = info;
+            status.className = 'status show';
+        });
+    </script>
+</body>
+</html>

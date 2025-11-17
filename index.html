@@ -87,6 +87,17 @@
     <script src="js/pwa-installer.js"></script>
 
     <script>
+        // Enregistrer le service worker avec gestion d'erreurs améliorée
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker enregistré avec succès:', registration);
+                })
+                .catch(error => {
+                    console.error('Erreur d\'enregistrement du Service Worker:', error);
+                });
+        }
+
         // Initialiser les systèmes
         document.addEventListener('DOMContentLoaded', function() {
             // Analytics: Enregistrer la visite
@@ -118,7 +129,7 @@
                 window.analyticsManager.trackEvent('role_selected', { role: 'techlead' });
             }
 
-            window.location.href = 'techlead.html';
+            window.location.href = '/techlead.html';
         });
 
         document.getElementById('enter-as-developer').addEventListener('click', function() {
@@ -140,7 +151,7 @@
                 window.analyticsManager.trackEvent('role_selected', { role: 'developer' });
             }
 
-            window.location.href = 'developer.html';
+            window.location.href = '/developer.html';
         });
 
         // Afficher les raccourcis clavier avec "?"
