@@ -56,7 +56,11 @@
 
 ## 🛠️ Installation
 
-### Méthode 1 : Installation Simple
+> ⚠️ **IMPORTANT** : TechQueue nécessite un serveur HTTP local. Vous ne pouvez PAS simplement ouvrir `index.html` directement.
+>
+> 👉 **[Voir le guide de démarrage rapide (QUICKSTART.md)](QUICKSTART.md)** pour résoudre les problèmes d'accès
+
+### Méthode 1 : Script automatique (RECOMMANDÉ)
 
 1. Clonez le dépôt :
 ```bash
@@ -64,13 +68,22 @@ git clone https://github.com/omeruis/tech-queue.git
 cd tech-queue
 ```
 
-2. Ouvrez `index.html` dans un navigateur moderne
+2. Démarrez le serveur avec le script :
+```bash
+# Linux/Mac
+./start-server.sh
 
-3. (Optionnel) Installez comme PWA :
+# Windows
+start-server.bat
+```
+
+3. Ouvrez votre navigateur et accédez à **http://localhost:3000**
+
+4. (Optionnel) Installez comme PWA :
    - Cliquez sur le bouton "Installer l'application" dans la barre d'adresse
    - Ou utilisez le bouton d'installation qui apparaît dans l'application
 
-### Méthode 2 : Serveur Local
+### Méthode 2 : Commande manuelle
 
 Pour bénéficier de toutes les fonctionnalités PWA :
 
